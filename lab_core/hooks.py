@@ -117,13 +117,13 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+permission_query_conditions = {
+	"Ledger Entry": "lab_core.ledger.permissions.get_ledger_entry_query_conditions",
+}
+
+has_permission = {
+	"Ledger Entry": "lab_core.ledger.permissions.has_ledger_entry_permission",
+}
 
 # DocType Class
 # ---------------
@@ -137,34 +137,32 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"Ledger Account": {
+		"after_insert": "lab_core.ledger.cache.invalidate_trial_balance_cache",
+		"on_update": "lab_core.ledger.cache.invalidate_trial_balance_cache",
+		"on_trash": "lab_core.ledger.cache.invalidate_trial_balance_cache",
+	},
+	"Ledger Entry": {
+		"on_submit": [
+			"lab_core.ledger.audit.enqueue_submit_audit",
+			"lab_core.ledger.cache.invalidate_trial_balance_cache",
+		],
+		"on_cancel": [
+			"lab_core.ledger.audit.enqueue_cancel_audit",
+			"lab_core.ledger.cache.invalidate_trial_balance_cache",
+		],
+	},
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"lab_core.tasks.all"
-# 	],
-# 	"daily": [
-# 		"lab_core.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"lab_core.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"lab_core.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"lab_core.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"lab_core.ledger.tasks.verify_ledger_integrity",
+	],
+}
 
 # Testing
 # -------
